@@ -21,7 +21,7 @@
             "type": "node-terminal"
         },
         {
-            "name": "Server ­– Node",
+            "name": "Server , Node",
             "type": "pwa-node",
             "request": "launch",
             "skipFiles": [
@@ -30,7 +30,7 @@
             "program": "${workspaceFolder}/web-app/server/server.js"
         },
         {
-            "name": "Browser – Firefox",
+            "name": "Browser , Firefox",
             "type": "firefox",
             "request": "launch",
             "reAttach": true,

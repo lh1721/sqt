@@ -33,15 +33,42 @@ describe("Hold", function () {
         When one further Hold is performed;
         Then the game state before and after the second hold, is the same.`,
         function () {
+            const initial_piece = initial_game.current_tetromino;
+            // You'll need to implement Tetris.hold before this works.
             const initial_game = Tetris.hold(Tetris.new_game());
-            // Implement the rest of this function.
+            const next_game = Tetris.hold(Tetris.initial_game());
+            const next_piece = next_game.current_tetromino;
+            if (!R.equals(initial_piece, next_piece)) {
+                throw new Error(
+                    `The inital and final tetrominos do not match
+                    Initial: ${JSON.stringify(initial_piece)}
+                    Final:   ${JSON.stringify(next_piece)}`
+                );
+            }
         }
     );
 
     it(
-        `### Change this to your test description ###`,
+        `If there is no held piece and a hold performed,
+        the next tetromino is depolyed:
+        Given a Tetris game where Hold has not yet been performed;
+        When a Hold is performed
+        Then the game state is changed from before holding,
+        as the next tetromino is deployed`,
         function () {
-            // Implement this function.
+            const initial_game = Tetris.new_game();
+            const initial_piece = initial_game.current_tetromino;
+            const next_game = Tetris.hold(initial_game);
+
+            const third_piece = next_game.next_tetromino;
+            if (R.equals(initial_piece, third_piece)) {
+                throw new Error(
+                    `The inital and final tetrominos do match
+                    Initial: ${JSON.stringify(initial_piece)}
+                    Final:   ${JSON.stringify(third_piece)}`
+                );
+            }
         }
     );
+
 });

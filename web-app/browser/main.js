@@ -10,6 +10,17 @@ document.documentElement.style.setProperty("--grid-columns", grid_columns);
 
 const grid = document.getElementById("grid");
 
+/* //to define aside in main.js
+const aside = document.getElementById("aside");*/
+
+const minigrid_columns = Tetris.minifield_width;
+const minigrid_rows = Tetris.minifield_height;
+
+document.documentElement.style.setProperty("--minigrid-rows", minigrid_rows);
+document.documentElement.style.setProperty("--minigrid-columns", minigrid_columns);
+
+const minigrid = document.getElementById("minigrid");
+
 const range = (n) => Array.from({"length": n}, (ignore, k) => k);
 
 const cells = range(grid_rows).map(function () {
@@ -29,6 +40,7 @@ const cells = range(grid_rows).map(function () {
     return rows;
 });
 
+
 const update_grid = function () {
     game.field.forEach(function (line, line_index) {
         line.forEach(function (block, column_index) {
@@ -36,6 +48,7 @@ const update_grid = function () {
             cell.className = `cell ${block}`;
         });
     });
+
 
     Tetris.tetromino_coordiates(game.current_tetromino, game.position).forEach(
         function (coord) {
@@ -50,6 +63,45 @@ const update_grid = function () {
         }
     );
 };
+
+
+const minicells = range(minigrid_rows).map(function () {
+    const minirow = document.createElement("div");
+    minirow.className = "minirow";
+
+    const minirows = range(minigrid_columns).map(function () {
+        const minicell = document.createElement("div");
+        minicell.className = "minicell";
+
+        minirow.append(minicell);
+
+        return minicell;
+    });
+
+    minigrid.append(minirow);
+    return minirows;
+});
+
+
+
+const update_minigrid = function (game) {
+    game.minifield.forEach(function (line, line_index) {
+        line.forEach(function (block, column_index) {
+            const minicell = minicells[line_index][column_index];
+            minicell.className = `cell ${block}`;
+            minicell.classList.remove("block");
+        });
+        game.next_tetromino.forEach(function (block, column_index) {
+            const minicell = minicells[line_index][column_index];
+            minicell.classList.add("block");
+        });
+    });
+
+    game.minifield(game.next_tetromino);
+    update_minigrid();
+
+};
+
 
 // Don't allow the player to hold down the rotate key.
 let key_locked = false;
@@ -75,8 +127,14 @@ document.body.onkeydown = function (event) {
     if (event.key === " ") {
         game = Tetris.hard_drop(game);
     }
+    // when c key pressed the piece is held
+    if (event.key === "c") {
+        game = Tetris.hold(game);
+    }
+
     update_grid();
 };
+
 
 const timer_function = function () {
     game = Tetris.next_turn(game);
@@ -85,5 +143,4 @@ const timer_function = function () {
 };
 
 setTimeout(timer_function, 500);
-
 update_grid();

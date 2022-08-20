@@ -2,7 +2,7 @@
   "name": "computing-2-submission",
   "type": "module",
   "version": "1.0.0",
-  "description": "",
+  "description": "In this code repository is a module that can simulate a game of Tetris\r `web-app/common/Tetris.js`\r and a web app to play the game.\r `web-app/browser/`",
   "main": "web-app/server/server.js",
   "author": "",
   "license": "ISC",
@@ -12,5 +12,20 @@
   },
   "dependencies": {
     "express": "^4.17.3"
-  }
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fourier-space/sqt.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/fourier-space/sqt/issues"
+  },
+  "homepage": "https://github.com/fourier-space/sqt#readme"
 }

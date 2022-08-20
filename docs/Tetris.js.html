@@ -55,7 +55,7 @@ const Tetris = Object.create(null);
 // ## Type Definitions                                                        //
 //----------------------------------------------------------------------------//
 
-
+//Added held_tetromino and can_hold added to the type definition.
 /**
  * A Tetris Game is all the information required to represent the current state
  * of a game, i.e. the field of play, location of the current tetromino,
@@ -63,10 +63,13 @@ const Tetris = Object.create(null);
  * @typedef {object} Game
  * @memberof Tetris
  * @property {Tetris.Tetromino_bag} bag New pieces get drawn from the bag.
+ * @property {boolean} can_hold Determines whether a piece can be held.
  * @property {Tetris.Tetromino} current_tetromino
  *     The tetromino in play descending in the field.
  * @property {Tetris.Field} field The grid containing locked in pieces.
  * @property {boolean} game_over Whether this game has ended.
+ * @property {Tetris.Tetromino} held_tetromino
+ *     The tetromino that is currently being held.
  * @property {Tetris.Tetromino} next_tetromino The next piece to descend.
  * @property {number[]} position Where in the field is the current tetromino.
  * @property {Tetris.Score} score Information relating to the score of the game.
@@ -134,6 +137,7 @@ const Tetris = Object.create(null);
  * @memberof Tetris
  */
 
+
 //----------------------------------------------------------------------------//
 // ## Constant Members                                                        //
 //----------------------------------------------------------------------------//
@@ -151,6 +155,9 @@ Tetris.I_tetromino = Object.freeze({
     "centre": [1, 0],
     "grid": [
         ["I", "I", "I", "I"]
+    ],
+    "minigrid": [
+        ["I", "I", "I", "I"]
     ]
 });
 
@@ -167,6 +174,10 @@ Tetris.J_tetromino = Object.freeze({
     "block_type": "J",
     "centre": [1, 0],
     "grid": [
+        ["J", "J", "J"],
+        [" ", " ", "J"]
+    ],
+    "minigrid": [
         ["J", "J", "J"],
         [" ", " ", "J"]
     ]
@@ -187,6 +198,10 @@ Tetris.L_tetromino = Object.freeze({
     "grid": [
         ["L", "L", "L"],
         ["L", " ", " "]
+    ],
+    "minigrid": [
+        ["L", "L", "L"],
+        ["L", " ", " "]
     ]
 });
 
@@ -203,6 +218,10 @@ Tetris.O_tetromino = Object.freeze({
     "block_type": "O",
     "centre": [0.5, 0.5],
     "grid": [
+        ["O", "O"],
+        ["O", "O"]
+    ],
+    "minigrid": [
         ["O", "O"],
         ["O", "O"]
     ]
@@ -223,6 +242,10 @@ Tetris.S_tetromino = Object.freeze({
     "grid": [
         [" ", "S", "S"],
         ["S", "S", " "]
+    ],
+    "minigrid": [
+        [" ", "S", "S"],
+        ["S", "S", " "]
     ]
 });
 
@@ -241,6 +264,10 @@ Tetris.T_tetromino = Object.freeze({
     "grid": [
         ["T", "T", "T"],
         [" ", "T", " "]
+    ],
+    "minigrid": [
+        ["T", "T", "T"],
+        [" ", "T", " "]
     ]
 });
 
@@ -257,6 +284,10 @@ Tetris.Z_tetromino = Object.freeze({
     "block_type": "Z",
     "centre": [1, 0],
     "grid": [
+        ["Z", "Z", " "],
+        [" ", "Z", "Z"]
+    ],
+    "minigrid": [
         ["Z", "Z", " "],
         [" ", "Z", "Z"]
     ]
@@ -300,6 +331,25 @@ Tetris.field_visible_height = 20;
  */
 Tetris.field_width = 10;
 
+
+/**
+ * The height of a minitetris field.
+ * Includes buffer rows at the top that may not be visible.
+ * @constant
+ * @memberof Tetris
+ * @default
+ */
+
+Tetris.minifield_height = 4;
+
+ /**
+  * The width of a minitetris field.
+  * @constant
+  * @memberof Tetris
+  * @default
+  */
+Tetris.minifield_width = 4;
+
 const starting_position = [Math.floor(Tetris.field_width / 2) - 1, 0];
 
 //----------------------------------------------------------------------------//
@@ -326,6 +376,7 @@ const new_line = function () {
     return R.repeat(empty_block, Tetris.field_width);
 };
 
+
 const new_field = function () {
     return R.times(new_line, Tetris.field_height);
 };
@@ -344,9 +395,13 @@ Tetris.new_game = function () {
 
     return {
         "bag": bag,
+        // initial boolean value
+        "can_hold": false,
         "current_tetromino": current_tetromino,
         "field": new_field(),
         "game_over": false,
+        // default initial object value
+        "held_tetromino": null,
         "next_tetromino": next_tetromino,
         "position": starting_position,
         "score": new_score()
@@ -428,6 +483,9 @@ const is_blocked = function (field, tetromino, position) {
  * @returns {Tetris.Game} The state after a left move is attempted.
  */
 Tetris.left = function (game) {
+    if (Tetris.is_game_over(game)) {
+        return game;
+    }
     const new_position = [game.position[0] - 1, game.position[1]];
     if (is_blocked(game.field, game.current_tetromino, new_position)) {
         return game;
@@ -445,6 +503,9 @@ Tetris.left = function (game) {
  * @returns {Tetris.Game} The state after a right move is attempted.
  */
 Tetris.right = function (game) {
+    if (Tetris.is_game_over(game)) {
+        return game;
+    }
     const new_position = [game.position[0] + 1, game.position[1]];
     if (is_blocked(game.field, game.current_tetromino, new_position)) {
         return game;
@@ -487,6 +548,9 @@ const rotate_tetromino_ccw = function (tetromino) {
  * @returns {Tetris.Game} The state after a CW rotation is attempted.
  */
 Tetris.rotate_cw = function (game) {
+    if (Tetris.is_game_over(game)) {
+        return game;
+    }
     const new_rotation = rotate_tetromino_cw(game.current_tetromino);
     if (is_blocked(game.field, new_rotation, game.position)) {
         return game;
@@ -504,6 +568,9 @@ Tetris.rotate_cw = function (game) {
  * @returns {Tetris.Game} The state after a CCW rotation is attempted.
  */
 Tetris.rotate_ccw = function (game) {
+    if (Tetris.is_game_over(game)) {
+        return game;
+    }
     const new_rotation = rotate_tetromino_ccw(game.current_tetromino);
     if (is_blocked(game.field, new_rotation, game.position)) {
         return game;
@@ -529,11 +596,14 @@ const drop_once = function (game) {
  * @returns {Tetris.Game} The state after a soft drop is attempted.
  */
 Tetris.soft_drop = function (game) {
+    if (Tetris.is_game_over(game)) {
+        return game;
+    }
     return drop_once(game);
 };
 
 /**
- * Perform a hard drop, where the piece immediatelt fully descends
+ * Perform a hard drop, where the piece immediately fully descends
  * until it hits the bottom of the field or another block.
  * This may accrue additional points.
  * A hard drop will immediately advance to the next turn.
@@ -543,6 +613,9 @@ Tetris.soft_drop = function (game) {
  * @returns {Tetris.Game} The state after a soft drop is attempted.
  */
 Tetris.hard_drop = function (game) {
+    if (Tetris.is_game_over(game)) {
+        return game;
+    }
     const dropped_once = drop_once(game);
     if (R.equals(game, dropped_once)) {
         return Tetris.next_turn(game);
@@ -577,6 +650,58 @@ const clear_lines = R.pipe(
     pad_field
 );
 
+//doesn't show up in acc doc but is in html - fix
+/**
+ * Attempts to hold the current tetromino in play.
+ * This can only occur if there is no tetromino currently being held.
+ * Holds can not be performed twice in a turn, so after the initial hold
+ * the piece now in play must be played to the next turn.
+ * @function
+ * @memberof Tetris
+ * @param {Tetris.Game} game The initial state of a game.
+ * @returns {Tetris.Game} A new game with the current tetromino held.
+ */
+
+    /* steps to implement Tetris.hold(): 1) has to check if piece can be held_
+            a) can be held if already holding nothing
+            b) a new turn has began
+            (cannot be held if has already been held in one turn)
+        2) if yes hold
+        3) if no do nothing
+    */
+
+Tetris.hold = function(game) {
+    if (game.can_hold) { //checks if can_hold is true
+        return {
+            game
+        };
+    }
+
+//no held tetromino
+    const initial_piece = game.held_tetromino(game);
+        if (R.equals(game.held_tetromino,null)) {
+            game.held_tetromino = game.current_tetromino;
+            Tetris.next_turn(game);
+            can_hold = true;
+            return initial_piece;
+        }
+
+//next turn where a new tetromino can be held
+    const next_piece = game.held_tetromino(game);
+        if (R.equals(game.held_tetromino, game.current_tetromino)) {
+            game.current_tetromino = game.next_tetromino;
+            game.next_tetromino = game.held_tetromino;
+            can_hold = true;
+            return next_piece;
+        }
+
+    return {
+         can_hold
+    }
+
+};
+
+
 /**
  * next_turn advances the Tetris game.
  * It will attempt to descent the current tetromino once.
@@ -589,6 +714,7 @@ const clear_lines = R.pipe(
  * @param {Tetris.Game} game
  * @returns {Tetris.Game}
  */
+
 Tetris.next_turn = function (game) {
     if (game.game_over) {
         return game;
@@ -607,22 +733,27 @@ Tetris.next_turn = function (game) {
         return lose(game);
     }
 
+
     const locked_field = lock(game);
 
     const cleared_field = clear_lines(locked_field);
 
     const [next_tetromino, bag] = game.bag();
 
+    //modified to contain the two fields can_hold and held_tetromino
     return {
         "bag": bag,
+        "can_hold": false,
         "current_tetromino": game.next_tetromino,
         "field": cleared_field,
         "game_over": false,
+        "held_tetromino": game.current_tetromino,
         "next_tetromino": next_tetromino,
         "position": starting_position,
         "score": game.score
     };
 };
+
 
 /**
  * @function
@@ -649,7 +780,7 @@ export default Object.freeze(Tetris);
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a> on Fri Jul 29 2022 14:40:07 GMT+0100 (British Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a> on Fri Aug 19 2022 14:20:01 GMT+0100 (British Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

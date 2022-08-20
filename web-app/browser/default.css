@@ -4,6 +4,11 @@
     --grid-rows: 6;
     --grid-aspect: var(--grid-columns) / var(--grid-rows);
 
+    /*creating a miniture grid to display the next piece*/
+    --minigrid-rows: 4;
+    --minigrid-columns: 4;
+    --minigrid-aspect: var(--minigrid-columns) / var(--minigrid-rows);
+    
     --footer-height: 48px;
     --header-height: 64px;
     --sidebar-width: clamp(100px, 25%, 300px);
@@ -19,9 +24,18 @@
     --palette-base4: #616569;
     --palette-base5: #eff0f1;
     --palette-secondary0: #345e75;
-    --palette-secondary1: #3daee9;
+    --palette-secondary1: #3a96c8;
+
+    /* added colours for each of the pieces*/
+    --palette-secondary2: #c80909;
+    --palette-secondary3: #e09a31;
+    --palette-secondary4: #d0e533;
+    --palette-secondary5: #20e083;
+    --palette-secondary6: #d0558e;
+    --palette-secondary7: #9d3cba;
 
     --grid-background: #1143c4;
+    --minigrid-background: #1143c4;
 }
 
 *
@@ -62,9 +76,9 @@ header h1
 {
     font-size: 28pt;
     font-weight: bold;
+    margin: 0;
     padding: 0;
     padding-top: 10px;
-    margin: 0;
 }
 
 aside
@@ -73,8 +87,18 @@ aside
     height: calc(100% - var(--header-height) - var(--footer-height));
     /* max-width: var(--sidebar-max-width); */
     position: absolute;
+    padding: 0;
+    padding-top: 1%;
     top: var(--header-height);
+    text-align: center;
     width: var(--sidebar-width);
+}
+
+aside subtext
+{
+    font-size: 22pt;
+    color: var(--palette-base5);
+    position: center;
 }
 
 main
@@ -85,6 +109,7 @@ main
     position: absolute;
     top: var(--header-height);
     width: calc(100% - var(--sidebar-width));
+    
 }
 
 footer
@@ -110,9 +135,32 @@ footer
     max-width: 100%;
 }
 
+/*creating a minature grid for the up next tetrimino*/
+.minigrid
+{
+    aspect-ratio: var(--minigrid-aspect);
+    background: var(--palette-base0);
+    margin: 2.5%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+    position: center;
+    max-height: 60%;
+    max-width: 60%;
+}
+
 .row
 {
     height: calc(100% / var(--grid-rows));
+    position: relative;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.minirow
+{
+    height: calc(100% / var(--minigrid-rows));
     position: relative;
     padding: 0;
     margin: 0;
@@ -131,24 +179,57 @@ footer
     width: calc(100% / var(--grid-columns));
 }
 
+.minicell
+{
+    background-size: cover;
+    border: 0.5px solid var(--palette-base3);
+    display: inline-block;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    width: calc(100% / var(--minigrid-columns));
+}
+
+
 .cell.empty
 {
-    
+    background-color: var(--grid-background);
+}
+
+.minicell.empty
+{
+    background-color: var(--grid-background);
 }
 
 .cell.I
 {
-    background-color: var(--palette-secondary1);
+    background-color: var(--palette-secondary2);
+}
+
+.minicell.I
+{
+    background-color: var(--palette-secondary2);
 }
 
 .cell.J
 {
-    background-color: var(--palette-secondary1);
+    background-color: var(--palette-secondary4);
+}
+
+.minicell.J
+{
+    background-color: var(--palette-secondary4);
 }
 
 .cell.L
 {
-    background-color: var(--palette-secondary1);
+    background-color: var(--palette-secondary6);
+}
+
+.minicell.L
+{
+    background-color: var(--palette-secondary6);
 }
 
 .cell.O
@@ -156,22 +237,48 @@ footer
     background-color: var(--palette-secondary1);
 }
 
-.cell.S
+.miinicell.O
 {
     background-color: var(--palette-secondary1);
+}
+
+.cell.S
+{
+    background-color: var(--palette-secondary3);
+}
+
+.minicell.S
+{
+    background-color: var(--palette-secondary3);
 }
 
 .cell.T
 {
-    background-color: var(--palette-secondary1);
+    background-color: var(--palette-secondary5);
+}
+
+.minicell.T
+{
+    background-color: var(--palette-secondary5);
 }
 
 .cell.Z
 {
-    background-color: var(--palette-secondary1);
+    background-color: var(--palette-secondary7);
+}
+
+.minicell.Z
+{
+    background-color: var(--palette-secondary7);
 }
 
 .cell.current
 {
     background-color: var(--palette-accent2);
 }
+
+.minicell.current
+{
+    background-color: var(--palette-accent2);
+}
+
