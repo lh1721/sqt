@@ -10,16 +10,25 @@ document.documentElement.style.setProperty("--grid-columns", grid_columns);
 
 const grid = document.getElementById("grid");
 
-/* //to define aside in main.js
-const aside = document.getElementById("aside");*/
+//to define aside in main.js
+//const aside = document.getElementById("aside");
 
-const minigrid_columns = Tetris.minifield_width;
-const minigrid_rows = Tetris.minifield_height;
+const up_next_grid_columns = Tetris.mini_field_width;
+const up_next_grid_rows = Tetris.mini_field_height;
 
-document.documentElement.style.setProperty("--minigrid-rows", minigrid_rows);
-document.documentElement.style.setProperty("--minigrid-columns", minigrid_columns);
+document.documentElement.style.setProperty("--up_next_grid-rows", up_next_grid_rows);
+document.documentElement.style.setProperty("--up_next_grid-columns", up_next_grid_columns);
 
-const minigrid = document.getElementById("minigrid");
+const up_next_grid = document.getElementById("up_next_grid");
+
+const held_grid_columns = Tetris.mini_field_width;
+const held_grid_rows = Tetris.mini_field_height;
+
+document.documentElement.style.setProperty("--held_grid-rows", held_grid_rows);
+document.documentElement.style.setProperty("--held_grid-columns", held_grid_columns);
+
+const held_grid = document.getElementById("held_grid");
+
 
 const range = (n) => Array.from({"length": n}, (ignore, k) => k);
 
@@ -62,44 +71,87 @@ const update_grid = function () {
             }
         }
     );
+
 };
 
 
-const minicells = range(minigrid_rows).map(function () {
-    const minirow = document.createElement("div");
-    minirow.className = "minirow";
+const up_next_cells = range(up_next_grid_rows).map(function () {
+    const up_next_row = document.createElement("div");
+    up_next_row.className = "up_next_row";
 
-    const minirows = range(minigrid_columns).map(function () {
-        const minicell = document.createElement("div");
-        minicell.className = "minicell";
+    const up_next_rows = range(up_next_grid_columns).map(function () {
+        const up_next_cell = document.createElement("div");
+        up_next_cell.className = "up_next_cell";
 
-        minirow.append(minicell);
+        up_next_row.append(up_next_cell);
 
-        return minicell;
+        return up_next_cell;
     });
 
-    minigrid.append(minirow);
-    return minirows;
+    up_next_grid.append(up_next_row);
+    return up_next_rows;
 });
 
 
-
-const update_minigrid = function (game) {
-    game.minifield.forEach(function (line, line_index) {
-        line.forEach(function (block, column_index) {
-            const minicell = minicells[line_index][column_index];
-            minicell.className = `cell ${block}`;
-            minicell.classList.remove("block");
-        });
-        game.next_tetromino.forEach(function (block, column_index) {
-            const minicell = minicells[line_index][column_index];
-            minicell.classList.add("block");
+const update_up_next_grid = function () {
+    up_next_cells.forEach(function (line) {
+        line.forEach(function (cell) {
+            cell.className = `up_next_cell`;
         });
     });
 
-    game.minifield(game.next_tetromino);
-    update_minigrid();
+    Tetris.tetromino_coordiates(game.next_tetromino,[2,2]).forEach(
+        function (coord) {
+            try {
+                const up_next_cell = up_next_cells[coord[1]][coord[0]];
+                up_next_cell.className = (
+                    `up_next_cell current ${game.next_tetromino.block_type}`
+                );
+            } catch (ignore) {
 
+            }
+        }
+    );
+};
+
+
+const held_cells = range(held_grid_rows).map(function () {
+    const held_row = document.createElement("div");
+    held_row.className = "held_row";
+
+    const held_rows = range(held_grid_columns).map(function () {
+        const held_cell = document.createElement("div");
+        held_cell.className = "held_cell";
+
+        held_row.append(held_cell);
+
+        return held_cell;
+    });
+
+    held_grid.append(held_row);
+    return held_rows;
+});
+
+
+const update_held_grid = function () {
+    held_cells.forEach(function (line) {
+        line.forEach(function (cell) {
+            cell.className = `held_cell`;
+        });
+    });
+
+    Tetris.tetromino_coordiates(game.held_tetromino,[1,2]).forEach(
+        function (coord) {
+            try {
+                const held_cell = held_cells[coord[1]][coord[0]];
+                held_cell.className = (
+                    `held_cell current ${game.held_tetromino.block_type}`
+                );
+            } catch (ignore) {
+
+            }
+        }
+    );
 };
 
 
@@ -133,6 +185,8 @@ document.body.onkeydown = function (event) {
     }
 
     update_grid();
+    update_up_next_grid();
+    update_held_grid();
 };
 
 
@@ -143,4 +197,8 @@ const timer_function = function () {
 };
 
 setTimeout(timer_function, 500);
+
+
 update_grid();
+update_up_next_grid();
+update_held_grid();

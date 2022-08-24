@@ -111,10 +111,8 @@ Tetris.I_tetromino = Object.freeze({
     "centre": [1, 0],
     "grid": [
         ["I", "I", "I", "I"]
-    ],
-    "minigrid": [
-        ["I", "I", "I", "I"]
     ]
+
 });
 
 /**
@@ -132,11 +130,9 @@ Tetris.J_tetromino = Object.freeze({
     "grid": [
         ["J", "J", "J"],
         [" ", " ", "J"]
-    ],
-    "minigrid": [
-        ["J", "J", "J"],
-        [" ", " ", "J"]
     ]
+
+
 });
 
 /**
@@ -154,11 +150,8 @@ Tetris.L_tetromino = Object.freeze({
     "grid": [
         ["L", "L", "L"],
         ["L", " ", " "]
-    ],
-    "minigrid": [
-        ["L", "L", "L"],
-        ["L", " ", " "]
     ]
+
 });
 
 /**
@@ -174,10 +167,6 @@ Tetris.O_tetromino = Object.freeze({
     "block_type": "O",
     "centre": [0.5, 0.5],
     "grid": [
-        ["O", "O"],
-        ["O", "O"]
-    ],
-    "minigrid": [
         ["O", "O"],
         ["O", "O"]
     ]
@@ -196,10 +185,6 @@ Tetris.S_tetromino = Object.freeze({
     "block_type": "S",
     "centre": [1, 0],
     "grid": [
-        [" ", "S", "S"],
-        ["S", "S", " "]
-    ],
-    "minigrid": [
         [" ", "S", "S"],
         ["S", "S", " "]
     ]
@@ -221,7 +206,7 @@ Tetris.T_tetromino = Object.freeze({
         ["T", "T", "T"],
         [" ", "T", " "]
     ],
-    "minigrid": [
+    "held_grid": [
         ["T", "T", "T"],
         [" ", "T", " "]
     ]
@@ -242,12 +227,9 @@ Tetris.Z_tetromino = Object.freeze({
     "grid": [
         ["Z", "Z", " "],
         [" ", "Z", "Z"]
-    ],
-    "minigrid": [
-        ["Z", "Z", " "],
-        [" ", "Z", "Z"]
     ]
 });
+
 
 const empty_block = " ";
 
@@ -296,7 +278,7 @@ Tetris.field_width = 10;
  * @default
  */
 
-Tetris.minifield_height = 4;
+Tetris.mini_field_height = 5;
 
  /**
   * The width of a minitetris field.
@@ -304,7 +286,7 @@ Tetris.minifield_height = 4;
   * @memberof Tetris
   * @default
   */
-Tetris.minifield_width = 4;
+Tetris.mini_field_width = 5;
 
 const starting_position = [Math.floor(Tetris.field_width / 2) - 1, 0];
 
@@ -352,7 +334,7 @@ Tetris.new_game = function () {
     return {
         "bag": bag,
         // initial boolean value
-        "can_hold": false,
+        "can_hold": true,
         "current_tetromino": current_tetromino,
         "field": new_field(),
         "game_over": false,
@@ -606,7 +588,14 @@ const clear_lines = R.pipe(
     pad_field
 );
 
-//doesn't show up in acc doc but is in html - fix
+    /* steps to implement Tetris.hold(): 1) has to check if piece can be held
+            a) can be held if already holding nothing
+            b) a new turn has began
+            (cannot be held if has already been held in one turn)
+        2) if yes hold
+        3) if no do nothing
+    */
+
 /**
  * Attempts to hold the current tetromino in play.
  * This can only occur if there is no tetromino currently being held.
@@ -617,45 +606,31 @@ const clear_lines = R.pipe(
  * @param {Tetris.Game} game The initial state of a game.
  * @returns {Tetris.Game} A new game with the current tetromino held.
  */
-
-    /* steps to implement Tetris.hold(): 1) has to check if piece can be held_
-            a) can be held if already holding nothing
-            b) a new turn has began
-            (cannot be held if has already been held in one turn)
-        2) if yes hold
-        3) if no do nothing
-    */
-
-
-//define what happens with this piece
 Tetris.hold = function (game) {
-    if (game.can_hold) { //checks if can_hold is true
-        return {
-            game
-        };
+    if (!game.can_hold) { //checks if can_hold is true
+        return game;
     }
+
+    game = R.clone(game);
+    game.position = starting_position;
 
 //no held tetromino
-    const initial_piece = game.held_tetromino(game);
-        if (R.equals(game.held_tetromino,null)) {
-            game.held_tetromino = game.current_tetromino;
-            Tetris.next_turn(game);
-            can_hold = true;
-            return initial_piece;
-        }
+    if (R.equals(game.held_tetromino, null)) {
+        game.held_tetromino = game.current_tetromino;
+        game.current_tetromino = game.next_tetromino;
+        const [next_tetromino, bag] = game.bag();
+        game.next_tetromino = next_tetromino;
+        game.bag = bag;
+        game.can_hold = false;
+        return game;
+    }
 
 //next turn where a new tetromino can be held
-    const next_piece = game.held_tetromino(game);
-        if (R.equals(game.held_tetromino, game.current_tetromino)) {
-            game.current_tetromino = game.next_tetromino;
-            game.next_tetromino = game.held_tetromino;
-            can_hold = true;
-            return next_piece;
-        }
-
-    return {
-         can_hold
-    }
+    const temp_tetromino = game.current_tetromino;
+    game.current_tetromino = game.held_tetromino;
+    game.held_tetromino = temp_tetromino;
+    game.can_hold = false;
+    return game;
 
 };
 
@@ -691,7 +666,6 @@ Tetris.next_turn = function (game) {
         return lose(game);
     }
 
-
     const locked_field = lock(game);
 
     const cleared_field = clear_lines(locked_field);
@@ -701,11 +675,11 @@ Tetris.next_turn = function (game) {
     //modified to contain the two fields can_hold and held_tetromino
     return {
         "bag": bag,
-        "can_hold": false,
+        "can_hold": true,
         "current_tetromino": game.next_tetromino,
         "field": cleared_field,
         "game_over": false,
-        "held_tetromino": game.current_tetromino,
+        "held_tetromino": game.held_tetromino,
         "next_tetromino": next_tetromino,
         "position": starting_position,
         "score": game.score
